@@ -11,7 +11,7 @@ This project allows users to easily convert PowerPoint (PPT) presentations into 
 Clone this repository:
 
 ```bash
-git clone https://github.com/yourusername/yourprojectname.git
+git clone https://github.com/msalvaris/SlideServe.git
 cd yourprojectname
 ```
 

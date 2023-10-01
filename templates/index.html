@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Viewer</title>
+    <style>
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 10px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            cursor: zoom-in;
+        }
+        /* Styles for the modal and overlay */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 900px;
+            transform: translate(0px, 200px);
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .close:hover, .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .pagination-buttons {
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 320px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 100%; /* Position the tooltip above the image */
+            left: 50%;
+            margin-left: -160px; /* Center the tooltip */
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Images from  {{ images_dir }}</h1>
+    <div class="image-grid" id="imageGrid">
+        <!-- Images will be inserted here by JavaScript -->
+    </div>
+
+    <div class="pagination-buttons">
+        <button onclick="prevPage()" id="prevButton" disabled>Previous</button>
+        <button onclick="nextPage()" id="nextButton">Next</button>
+    </div>
+
+    <!-- Modal for Enlarged Image -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <script>
+        const images = [
+            {% for image,imgf in images %}
+                {imgSrc: '{{ url_for('serve_image', path=images_dir + '/' + image) }}', imgDescription: '{{imgf}}'},
+            {% endfor %}
+        ];
+
+        
+        let currentPage = 0;
+        const imagesPerPage = 100;
+
+        function showPage(page) {
+            const imageGrid = document.getElementById('imageGrid');
+            const startIndex = page * imagesPerPage;
+            const endIndex = startIndex + imagesPerPage;
+            const imagesToShow = images.slice(startIndex, endIndex);
+            imageGrid.innerHTML = imagesToShow.map(({imgSrc, imgDescription}) => `
+                <div class=tooltip-container>
+                    <img src="${imgSrc}" alt="Image" onclick="showModal('${imgSrc}')">
+                    <span class="tooltip-text">${imgDescription}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('prevButton').disabled = (page === 0);
+            document.getElementById('nextButton').disabled = (endIndex >= images.length);
+        }
+
+        function nextPage() {
+            if ((currentPage + 1) * imagesPerPage < images.length) {
+                currentPage++;
+                showPage(currentPage);
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                showPage(currentPage);
+            }
+        }
+
+        function showModal(imgSrc) {
+            const modal = document.getElementById("imageModal");
+            const modalImg = document.getElementById("modalImage");
+            
+            modal.style.display = "block";
+            modalImg.src = imgSrc;
+        }
+    
+        function closeModal() {
+            const modal = document.getElementById("imageModal");
+            modal.style.display = "none";
+        }
+
+        // Show the first page initially
+        showPage(0);
+    </script>
+</body>
+</html>
